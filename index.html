@@ -210,6 +210,33 @@
       cursor: default;
     }
 
+    .finish-btn {
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      color: var(--text-muted);
+      font-size: 14px;
+      font-weight: 600;
+      padding: 11px 22px;
+      border-radius: 12px;
+      cursor: pointer;
+      margin-top: 14px;
+      align-self: center;
+      transition: all 0.2s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .finish-btn:hover {
+      background: rgba(255, 255, 255, 0.08);
+      color: #fff;
+      border-color: rgba(255, 255, 255, 0.3);
+    }
+
+    .finish-btn:active {
+      transform: scale(0.97);
+    }
+
     /* Bottom Sheet / Result Feedback */
     .feedback-sheet {
       position: fixed;
@@ -373,12 +400,13 @@
         <!-- Buttons generated dynamically -->
       </div>
     </div>
+    <button class="finish-btn" id="finishEarlyBtn" onclick="finishEarly()">🏁 Завершить досрочно</button>
   </main>
 
   <!-- Final Results Screen -->
   <div class="results-screen" id="resultsScreen">
-    <h2 style="font-size: 26px;">🎉 Тренировка завершена!</h2>
-    <p style="color: var(--text-muted); font-size: 15px;">Отличный шаг к уверенной сдаче ЕГЭ</p>
+    <h2 style="font-size: 26px;" id="resultsTitle">🎉 Тренировка завершена!</h2>
+    <p style="color: var(--text-muted); font-size: 15px;" id="resultsSubtitle">Отличный шаг к уверенной сдаче ЕГЭ</p>
     
     <div class="score-circle" id="scoreCircle">
       <span class="score-text" id="scoreText">85%</span>
@@ -397,6 +425,7 @@
 
     <button class="action-btn" onclick="restartDeck()">Начать заново 🔄</button>
     <button class="action-btn" id="repeatMistakesBtn" style="background: rgba(255,255,255,0.08); color: #fff; box-shadow: none;" onclick="repeatMistakes()">Повторить ошибки ⚠️</button>
+    <button class="action-btn" style="background: transparent; border: 1px solid rgba(255,255,255,0.18); color: var(--text-muted); box-shadow: none;" onclick="backToMenu()">Выбрать другой раздел 📚</button>
   </div>
 
   <!-- Bottom Feedback Sheet -->
@@ -572,26 +601,54 @@
     function nextQuestion() {
       document.getElementById("feedbackSheet").classList.remove("active");
       currentIndex++;
-      renderCurrentQuestion();
+      if (currentIndex >= deck.length) {
+        showResults(false);
+      } else {
+        renderCurrentQuestion();
+      }
     }
 
-    function showResults() {
+    function finishEarly() {
+      const attempted = score.correct + mistakes.length;
+      if (attempted === 0) {
+        alert("Вы пока не ответили ни на один вопрос. Выберите вариант ответа, чтобы увидеть свой результат!");
+        return;
+      }
+      showResults(true);
+    }
+
+    function showResults(isEarly = false) {
+      document.getElementById("feedbackSheet").classList.remove("active");
       document.getElementById("mainContainer").style.display = "none";
       document.getElementById("appHeader").style.display = "none";
       const resultsScreen = document.getElementById("resultsScreen");
       resultsScreen.style.display = "flex";
 
-      const percent = Math.round((score.correct / score.total) * 100);
+      const attempted = score.correct + mistakes.length;
+      const percent = attempted > 0 ? Math.round((score.correct / attempted) * 100) : 0;
+
+      document.getElementById("resultsTitle").innerText = isEarly ? "📊 Тренировка завершена досрочно" : "🎉 Тренировка завершена!";
+      document.getElementById("resultsSubtitle").innerText = isEarly 
+        ? `Решено заданий: ${attempted} (непройденные не снижают оценку)` 
+        : `Решены все задания колоды (${attempted} из ${deck.length})`;
+
       document.getElementById("scoreText").innerText = `${percent}%`;
       document.getElementById("scoreCircle").style.setProperty("--percent", percent);
 
-      document.getElementById("statCorrect").innerText = `${score.correct} / ${score.total}`;
+      document.getElementById("statCorrect").innerText = `${score.correct} из ${attempted}`;
       document.getElementById("statMistakes").innerText = mistakes.length;
 
       const repeatBtn = document.getElementById("repeatMistakesBtn");
       repeatBtn.style.display = mistakes.length > 0 ? "block" : "none";
 
       tg?.HapticFeedback?.notificationOccurred("success");
+    }
+
+    function backToMenu() {
+      document.getElementById("resultsScreen").style.display = "none";
+      document.getElementById("mainContainer").style.display = "flex";
+      document.getElementById("appHeader").style.display = "flex";
+      initDeck();
     }
 
     function restartDeck() {
