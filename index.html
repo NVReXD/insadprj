@@ -50,35 +50,77 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
+      gap: 8px;
     }
 
-    .modes {
+    .subject-tabs {
       display: flex;
-      flex-wrap: wrap;
-      justify-content: center;
       gap: 4px;
       background: var(--card-bg);
-      border-radius: 16px;
-      padding: 6px;
+      border-radius: 14px;
+      padding: 4px;
       border: 1px solid var(--border);
+      flex: 1;
     }
 
-    .mode-btn {
+    .subject-btn {
       background: transparent;
       border: none;
       color: var(--text-muted);
-      padding: 6px 14px;
+      padding: 7px 10px;
       font-size: 13px;
+      font-weight: 600;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: all 0.2s;
+      flex: 1;
+      text-align: center;
+      white-space: nowrap;
+    }
+
+    .subject-btn.active {
+      background: var(--primary);
+      color: var(--primary-text);
+      box-shadow: 0 2px 8px rgba(56, 189, 248, 0.3);
+    }
+
+    .subtopics-scroll {
+      display: flex;
+      gap: 6px;
+      overflow-x: auto;
+      padding: 2px 0 4px 0;
+      scrollbar-width: none;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    .subtopics-scroll::-webkit-scrollbar {
+      display: none;
+    }
+
+    .subtopic-btn {
+      flex-shrink: 0;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      color: var(--text-muted);
+      padding: 6px 13px;
+      font-size: 12px;
       font-weight: 600;
       border-radius: 9999px;
       cursor: pointer;
       transition: all 0.2s;
+      white-space: nowrap;
     }
 
-    .mode-btn.active {
-      background: var(--primary);
-      color: var(--primary-text);
-      box-shadow: 0 2px 8px rgba(56, 189, 248, 0.3);
+    .subtopic-btn:hover {
+      background: rgba(255, 255, 255, 0.08);
+      color: #fff;
+    }
+
+    .subtopic-btn.active {
+      background: rgba(56, 189, 248, 0.15);
+      border-color: var(--primary);
+      color: var(--primary);
+      box-shadow: 0 0 10px rgba(56, 189, 248, 0.2);
     }
 
     .streak-badge {
@@ -373,15 +415,19 @@
   <!-- Top Bar -->
   <header id="appHeader">
     <div class="top-bar">
-      <div class="modes">
-        <button class="mode-btn active" id="modeStress" onclick="switchMode('stress')">🎯 Ударения</button>
-        <button class="mode-btn" id="modeParonym" onclick="switchMode('paronym')">📚 Паронимы</button>
-        <button class="mode-btn" id="modeSoc" onclick="switchMode('soc')">🏛️ Общество</button>
-        <button class="mode-btn" id="modeMath" onclick="switchMode('math')">📐 Математика</button>
+      <div class="subject-tabs">
+        <button class="subject-btn active" id="subjRussian" onclick="switchSubject('russian')">📖 Русский язык</button>
+        <button class="subject-btn" id="subjSoc" onclick="switchSubject('soc')">🏛️ Общество</button>
+        <button class="subject-btn" id="subjMath" onclick="switchSubject('math')">📐 Математика</button>
       </div>
       <div class="streak-badge">
         🔥 <span id="streakCount">0</span>
       </div>
+    </div>
+
+    <!-- Subtopics / Sections of the selected subject -->
+    <div class="subtopics-scroll" id="subtopicsContainer">
+      <!-- Generated dynamically -->
     </div>
     
     <div class="progress-bar-container">
@@ -449,7 +495,63 @@
       tg.ready();
     }
 
-    let currentMode = "stress";
+    const SUBJECT_CONFIG = {
+      russian: {
+        name: "Русский язык",
+        btnId: "subjRussian",
+        defaultSubtopic: "stress",
+        subtopics: [
+          { id: "stress", title: "🎯 Ударения (Зад. 4)" },
+          { id: "paronym", title: "📚 Паронимы (Зад. 5)" },
+          { id: "all", title: "🔀 Все задания (микс)" }
+        ],
+        getDeck: (subId) => {
+          if (subId === "stress") return STRESS_DATA;
+          if (subId === "paronym") return PARONYM_DATA;
+          return [...STRESS_DATA, ...PARONYM_DATA];
+        }
+      },
+      soc: {
+        name: "Обществознание",
+        btnId: "subjSoc",
+        defaultSubtopic: "all",
+        subtopics: [
+          { id: "all", title: "🌟 Все темы (ЕГЭ)" },
+          { id: "Человек и общество", title: "🧠 Человек и общество" },
+          { id: "Экономика", title: "💰 Экономика" },
+          { id: "Социальные отношения", title: "👥 Соц. отношения" },
+          { id: "Политика", title: "👑 Политика" },
+          { id: "Право", title: "⚖️ Право" }
+        ],
+        getDeck: (subId) => {
+          if (subId === "all") return SOC_DATA;
+          return SOC_DATA.filter(q => q.topic === subId);
+        }
+      },
+      math: {
+        name: "Математика",
+        btnId: "subjMath",
+        defaultSubtopic: "all",
+        subtopics: [
+          { id: "all", title: "🌟 Все задания (ЕГЭ)" },
+          { id: "deriv", title: "⚡ Производная и функции" },
+          { id: "prob", title: "🎲 Теория вероятностей" },
+          { id: "geom", title: "📐 Геометрия и векторы" },
+          { id: "alg", title: "🔢 Алгебра и уравнения" }
+        ],
+        getDeck: (subId) => {
+          if (subId === "all") return MATH_DATA;
+          if (subId === "deriv") return MATH_DATA.filter(q => q.topic.includes("Производная") || q.topic.includes("функций"));
+          if (subId === "prob") return MATH_DATA.filter(q => q.topic.includes("вероятност"));
+          if (subId === "geom") return MATH_DATA.filter(q => q.topic.includes("Планиметрия") || q.topic.includes("Стереометрия") || q.topic.includes("Векторы"));
+          if (subId === "alg") return MATH_DATA.filter(q => q.topic.includes("уравнения") || q.topic.includes("Логарифмы") || q.topic.includes("Степени") || q.topic.includes("Тригонометрия") || q.topic.includes("задачи"));
+          return MATH_DATA;
+        }
+      }
+    };
+
+    let currentSubject = "russian";
+    let currentSubtopic = "stress";
     let deck = [];
     let currentIndex = 0;
     let score = { correct: 0, total: 0 };
@@ -466,37 +568,54 @@
       return arr;
     }
 
+    function renderSubtopics() {
+      const container = document.getElementById("subtopicsContainer");
+      container.innerHTML = "";
+      const conf = SUBJECT_CONFIG[currentSubject];
+      conf.subtopics.forEach(sub => {
+        const btn = document.createElement("button");
+        btn.className = `subtopic-btn ${sub.id === currentSubtopic ? "active" : ""}`;
+        btn.innerText = sub.title;
+        btn.onclick = () => switchSubtopic(sub.id);
+        container.appendChild(btn);
+      });
+    }
+
+    function switchSubject(subject) {
+      if (currentSubject === subject) return;
+      currentSubject = subject;
+      
+      document.querySelectorAll(".subject-btn").forEach(b => b.classList.remove("active"));
+      document.getElementById(SUBJECT_CONFIG[subject].btnId).classList.add("active");
+
+      currentSubtopic = SUBJECT_CONFIG[subject].defaultSubtopic;
+      renderSubtopics();
+
+      document.getElementById("resultsScreen").style.display = "none";
+      document.getElementById("mainContainer").style.display = "flex";
+      document.getElementById("appHeader").style.display = "flex";
+      initDeck();
+    }
+
+    function switchSubtopic(subId) {
+      currentSubtopic = subId;
+      renderSubtopics();
+
+      document.getElementById("resultsScreen").style.display = "none";
+      document.getElementById("mainContainer").style.display = "flex";
+      document.getElementById("appHeader").style.display = "flex";
+      initDeck();
+    }
+
     function initDeck() {
-      let source;
-      if (currentMode === "stress") {
-        source = STRESS_DATA;
-      } else if (currentMode === "paronym") {
-        source = PARONYM_DATA;
-      } else if (currentMode === "soc") {
-        source = SOC_DATA;
-      } else {
-        source = MATH_DATA;
-      }
+      const conf = SUBJECT_CONFIG[currentSubject];
+      const source = conf.getDeck(currentSubtopic);
       deck = shuffle(source);
       currentIndex = 0;
       score = { correct: 0, total: deck.length };
       mistakes = [];
       updateProgress();
       renderCurrentQuestion();
-    }
-
-    function switchMode(mode) {
-      if (currentMode === mode) return;
-      currentMode = mode;
-      document.getElementById("modeStress").classList.toggle("active", mode === "stress");
-      document.getElementById("modeParonym").classList.toggle("active", mode === "paronym");
-      document.getElementById("modeSoc").classList.toggle("active", mode === "soc");
-      document.getElementById("modeMath").classList.toggle("active", mode === "math");
-      
-      document.getElementById("resultsScreen").style.display = "none";
-      document.getElementById("mainContainer").style.display = "flex";
-      document.getElementById("appHeader").style.display = "flex";
-      initDeck();
     }
 
     function updateProgress() {
@@ -506,7 +625,7 @@
 
     function renderCurrentQuestion() {
       if (currentIndex >= deck.length) {
-        showResults();
+        showResults(false);
         return;
       }
 
@@ -519,18 +638,18 @@
       optionsContainer.innerHTML = "";
       cardTitle.classList.remove("word-focus");
 
-      if (currentMode === "stress") {
-        cardTag.innerText = "Задание 4 ЕГЭ • Орфоэпия";
+      if (q.word) {
+        cardTag.innerText = "Русский язык • Задание 4 (Орфоэпия)";
         cardTitle.classList.add("word-focus");
         cardTitle.innerText = q.word;
         cardSubtitle.style.display = "block";
         cardSubtitle.innerText = "Выберите вариант с правильным ударением:";
-      } else if (currentMode === "paronym") {
-        cardTag.innerText = "Задание 5 ЕГЭ • Паронимы";
+      } else if (q.sentence) {
+        cardTag.innerText = "Русский язык • Задание 5 (Паронимы)";
         cardTitle.innerText = `«${q.sentence}»`;
         cardSubtitle.style.display = "block";
         cardSubtitle.innerText = "Вставьте подходящее слово из пары паронимов:";
-      } else if (currentMode === "soc") {
+      } else if (currentSubject === "soc") {
         cardTag.innerText = `ЕГЭ Обществознание • ${q.topic}`;
         cardTitle.innerText = q.question;
         cardSubtitle.style.display = "none";
@@ -673,6 +792,7 @@
     }
 
     // Start on load
+    renderSubtopics();
     initDeck();
   </script>
 </body>
