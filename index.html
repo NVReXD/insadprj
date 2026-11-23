@@ -338,6 +338,7 @@
       <div class="modes">
         <button class="mode-btn active" id="modeStress" onclick="switchMode('stress')">🎯 Ударения</button>
         <button class="mode-btn" id="modeParonym" onclick="switchMode('paronym')">📚 Паронимы</button>
+        <button class="mode-btn" id="modeSoc" onclick="switchMode('soc')">🏛️ Обществознание</button>
       </div>
       <div class="streak-badge">
         🔥 <span id="streakCount">0</span>
@@ -425,7 +426,14 @@
     }
 
     function initDeck() {
-      const source = (currentMode === "stress") ? STRESS_DATA : PARONYM_DATA;
+      let source;
+      if (currentMode === "stress") {
+        source = STRESS_DATA;
+      } else if (currentMode === "paronym") {
+        source = PARONYM_DATA;
+      } else {
+        source = SOC_DATA;
+      }
       deck = shuffle(source);
       currentIndex = 0;
       score = { correct: 0, total: deck.length };
@@ -439,6 +447,7 @@
       currentMode = mode;
       document.getElementById("modeStress").classList.toggle("active", mode === "stress");
       document.getElementById("modeParonym").classList.toggle("active", mode === "paronym");
+      document.getElementById("modeSoc").classList.toggle("active", mode === "soc");
       
       document.getElementById("resultsScreen").style.display = "none";
       document.getElementById("mainContainer").style.display = "flex";
@@ -469,10 +478,14 @@
         cardTag.innerText = "Задание 4 ЕГЭ (Орфоэпия)";
         cardTitle.innerText = q.word;
         cardSubtitle.innerText = "Выберите вариант с правильным ударением:";
-      } else {
+      } else if (currentMode === "paronym") {
         cardTag.innerText = "Задание 5 ЕГЭ (Паронимы)";
         cardTitle.innerText = "Вставьте слово:";
         cardSubtitle.innerText = `«${q.sentence}»`;
+      } else {
+        cardTag.innerText = `ЕГЭ Обществознание • ${q.topic}`;
+        cardTitle.innerText = "Тест:";
+        cardSubtitle.innerText = q.question;
       }
 
       // Shuffle options for this question
