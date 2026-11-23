@@ -147,14 +147,22 @@
     }
 
     .card-title {
-      font-size: 26px;
-      font-weight: 700;
-      line-height: 1.3;
+      font-size: 19px;
+      font-weight: 600;
+      line-height: 1.45;
       color: #fff;
     }
 
+    .card-title.word-focus {
+      font-size: 32px;
+      font-weight: 800;
+      text-align: center;
+      letter-spacing: 0.02em;
+      margin: 6px 0;
+    }
+
     .card-subtitle {
-      font-size: 15px;
+      font-size: 14px;
       color: var(--text-muted);
       line-height: 1.5;
     }
@@ -480,23 +488,29 @@
       const optionsContainer = document.getElementById("optionsContainer");
 
       optionsContainer.innerHTML = "";
+      cardTitle.classList.remove("word-focus");
 
       if (currentMode === "stress") {
-        cardTag.innerText = "Задание 4 ЕГЭ (Орфоэпия)";
+        cardTag.innerText = "Задание 4 ЕГЭ • Орфоэпия";
+        cardTitle.classList.add("word-focus");
         cardTitle.innerText = q.word;
+        cardSubtitle.style.display = "block";
         cardSubtitle.innerText = "Выберите вариант с правильным ударением:";
       } else if (currentMode === "paronym") {
-        cardTag.innerText = "Задание 5 ЕГЭ (Паронимы)";
-        cardTitle.innerText = "Вставьте слово:";
-        cardSubtitle.innerText = `«${q.sentence}»`;
+        cardTag.innerText = "Задание 5 ЕГЭ • Паронимы";
+        cardTitle.innerText = `«${q.sentence}»`;
+        cardSubtitle.style.display = "block";
+        cardSubtitle.innerText = "Вставьте подходящее слово из пары паронимов:";
       } else if (currentMode === "soc") {
         cardTag.innerText = `ЕГЭ Обществознание • ${q.topic}`;
-        cardTitle.innerText = "Тест:";
-        cardSubtitle.innerText = q.question;
+        cardTitle.innerText = q.question;
+        cardSubtitle.style.display = "none";
+        cardSubtitle.innerText = "";
       } else {
         cardTag.innerText = `ЕГЭ Математика • ${q.topic}`;
-        cardTitle.innerText = "Задача:";
-        cardSubtitle.innerText = q.question;
+        cardTitle.innerText = q.question;
+        cardSubtitle.style.display = "none";
+        cardSubtitle.innerText = "";
       }
 
       // Shuffle options for this question
