@@ -418,11 +418,13 @@
 
     .cheatsheet-list {
       width: 100%;
-      max-width: 440px;
+      max-width: 1280px;
+      margin: 0 auto;
       display: none;
-      flex-direction: column;
-      gap: 14px;
+      grid-template-columns: repeat(auto-fill, minmax(310px, 1fr));
+      gap: 16px;
       padding-bottom: 24px;
+      align-items: stretch;
     }
 
     .cheat-card {
@@ -699,12 +701,14 @@
       if (currentSubject === "cheat") {
         questionCard.style.display = "none";
         finishBtn.style.display = "none";
-        cheatContainer.style.display = "flex";
+        document.getElementById("mainContainer").style.justifyContent = "flex-start";
+        cheatContainer.style.display = "grid";
         progressBar.style.width = "100%";
         renderCheatsheets(conf.getDeck(currentSubtopic));
         return;
       }
 
+      document.getElementById("mainContainer").style.justifyContent = "center";
       questionCard.style.display = "block";
       finishBtn.style.display = "block";
       cheatContainer.style.display = "none";
@@ -721,7 +725,7 @@
     function renderCheatsheets(items) {
       const container = document.getElementById("cheatsheetContainer");
       container.innerHTML = `
-        <div class="cheat-card" style="border-color: rgba(56, 189, 248, 0.45); background: rgba(56, 189, 248, 0.08);">
+        <div class="cheat-card" style="grid-column: 1 / -1; border-color: rgba(56, 189, 248, 0.45); background: rgba(56, 189, 248, 0.08);">
           <span class="cheat-badge">💡 Памятка ученику</span>
           <h3 class="cheat-title" style="font-size: 15px; margin-bottom: 6px;">Для лёгкого запоминания, а не списывания!</h3>
           <p style="font-size: 13px; color: #cbd5e1; line-height: 1.45;">
