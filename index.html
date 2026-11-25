@@ -61,19 +61,26 @@
       padding: 4px;
       border: 1px solid var(--border);
       flex: 1;
+      overflow-x: auto;
+      scrollbar-width: none;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    .subject-tabs::-webkit-scrollbar {
+      display: none;
     }
 
     .subject-btn {
       background: transparent;
       border: none;
       color: var(--text-muted);
-      padding: 7px 10px;
+      padding: 7px 11px;
       font-size: 13px;
       font-weight: 600;
       border-radius: 10px;
       cursor: pointer;
       transition: all 0.2s;
-      flex: 1;
+      flex: 0 0 auto;
       text-align: center;
       white-space: nowrap;
     }
@@ -408,6 +415,66 @@
       color: var(--text-muted);
       margin-top: 2px;
     }
+
+    .cheatsheet-list {
+      width: 100%;
+      max-width: 440px;
+      display: none;
+      flex-direction: column;
+      gap: 14px;
+      padding-bottom: 24px;
+    }
+
+    .cheat-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 18px 20px;
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.25);
+    }
+
+    .cheat-badge {
+      display: inline-block;
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: var(--primary);
+      background: rgba(56, 189, 248, 0.12);
+      padding: 4px 10px;
+      border-radius: 999px;
+      margin-bottom: 8px;
+    }
+
+    .cheat-title {
+      font-size: 17px;
+      font-weight: 700;
+      color: #fff;
+      margin-bottom: 10px;
+    }
+
+    .cheat-items {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 7px;
+    }
+
+    .cheat-items li {
+      font-size: 13.5px;
+      line-height: 1.45;
+      color: #cbd5e1;
+      padding-left: 14px;
+      position: relative;
+    }
+
+    .cheat-items li::before {
+      content: "•";
+      position: absolute;
+      left: 0;
+      color: var(--primary);
+      font-weight: 700;
+    }
   </style>
 </head>
 <body>
@@ -416,9 +483,11 @@
   <header id="appHeader">
     <div class="top-bar">
       <div class="subject-tabs">
-        <button class="subject-btn active" id="subjRussian" onclick="switchSubject('russian')">📖 Русский язык</button>
+        <button class="subject-btn active" id="subjRussian" onclick="switchSubject('russian')">📖 Русский</button>
         <button class="subject-btn" id="subjSoc" onclick="switchSubject('soc')">🏛️ Общество</button>
         <button class="subject-btn" id="subjMath" onclick="switchSubject('math')">📐 Математика</button>
+        <button class="subject-btn" id="subjOge" onclick="switchSubject('oge')">🎓 ОГЭ 9 кл.</button>
+        <button class="subject-btn" id="subjCheat" onclick="switchSubject('cheat')">📚 Шпора</button>
       </div>
       <div class="streak-badge">
         🔥 <span id="streakCount">0</span>
@@ -447,6 +516,7 @@
       </div>
     </div>
     <button class="finish-btn" id="finishEarlyBtn" onclick="finishEarly()">🏁 Завершить досрочно</button>
+    <div class="cheatsheet-list" id="cheatsheetContainer"></div>
   </main>
 
   <!-- Final Results Screen -->
@@ -547,6 +617,36 @@
           if (subId === "alg") return MATH_DATA.filter(q => q.topic.includes("уравнения") || q.topic.includes("Логарифмы") || q.topic.includes("Степени") || q.topic.includes("Тригонометрия") || q.topic.includes("задачи"));
           return MATH_DATA;
         }
+      },
+      oge: {
+        name: "ОГЭ 9 класс",
+        btnId: "subjOge",
+        defaultSubtopic: "all",
+        subtopics: [
+          { id: "all", title: "🌟 Все задания ОГЭ" },
+          { id: "ОГЭ Русский", title: "📖 Русский язык" },
+          { id: "ОГЭ Математика", title: "📐 Математика" },
+          { id: "ОГЭ Обществознание", title: "🏛️ Обществознание" }
+        ],
+        getDeck: (subId) => {
+          if (subId === "all") return OGE_DATA;
+          return OGE_DATA.filter(q => q.topic === subId);
+        }
+      },
+      cheat: {
+        name: "Шпаргалка",
+        btnId: "subjCheat",
+        defaultSubtopic: "all",
+        subtopics: [
+          { id: "all", title: "🌟 Все разделы" },
+          { id: "math", title: "📐 Формулы (Матем.)" },
+          { id: "russian", title: "📖 Правила (Русский)" },
+          { id: "soc", title: "🏛️ Таблицы (Общество)" }
+        ],
+        getDeck: (subId) => {
+          if (subId === "all") return CHEATSHEETS;
+          return CHEATSHEETS.filter(c => c.category === subId);
+        }
       }
     };
 
@@ -609,6 +709,26 @@
 
     function initDeck() {
       const conf = SUBJECT_CONFIG[currentSubject];
+      const questionCard = document.getElementById("questionCard");
+      const finishBtn = document.getElementById("finishEarlyBtn");
+      const cheatContainer = document.getElementById("cheatsheetContainer");
+      const progressBar = document.getElementById("progressBar");
+
+      document.getElementById("feedbackSheet").classList.remove("active");
+
+      if (currentSubject === "cheat") {
+        questionCard.style.display = "none";
+        finishBtn.style.display = "none";
+        cheatContainer.style.display = "flex";
+        progressBar.style.width = "100%";
+        renderCheatsheets(conf.getDeck(currentSubtopic));
+        return;
+      }
+
+      questionCard.style.display = "block";
+      finishBtn.style.display = "block";
+      cheatContainer.style.display = "none";
+
       const source = conf.getDeck(currentSubtopic);
       deck = shuffle(source);
       currentIndex = 0;
@@ -616,6 +736,22 @@
       mistakes = [];
       updateProgress();
       renderCurrentQuestion();
+    }
+
+    function renderCheatsheets(items) {
+      const container = document.getElementById("cheatsheetContainer");
+      container.innerHTML = "";
+      items.forEach(sheet => {
+        const card = document.createElement("div");
+        card.className = "cheat-card";
+        const listHtml = sheet.items.map(line => `<li>${line}</li>`).join("");
+        card.innerHTML = `
+          <span class="cheat-badge">${sheet.badge}</span>
+          <h3 class="cheat-title">${sheet.title}</h3>
+          <ul class="cheat-items">${listHtml}</ul>
+        `;
+        container.appendChild(card);
+      });
     }
 
     function updateProgress() {
@@ -651,6 +787,11 @@
         cardSubtitle.innerText = "Вставьте подходящее слово из пары паронимов:";
       } else if (currentSubject === "soc") {
         cardTag.innerText = `ЕГЭ Обществознание • ${q.topic}`;
+        cardTitle.innerText = q.question;
+        cardSubtitle.style.display = "none";
+        cardSubtitle.innerText = "";
+      } else if (currentSubject === "oge") {
+        cardTag.innerText = `ОГЭ 9 класс • ${q.topic.replace("ОГЭ ", "")}`;
         cardTitle.innerText = q.question;
         cardSubtitle.style.display = "none";
         cardSubtitle.innerText = "";
