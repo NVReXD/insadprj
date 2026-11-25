@@ -580,7 +580,10 @@
           { id: "math_all", title: "📐 Матем: Все" },
           { id: "math_deriv", title: "⚡ Матем: Производная" },
           { id: "math_prob", title: "🎲 Матем: Вероятность" },
-          { id: "math_geom", title: "📐 Матем: Геометрия" }
+          { id: "math_geom", title: "📐 Матем: Геометрия" },
+          { id: "phys_all", title: "⚛️ Физика: Все" },
+          { id: "phys_mech", title: "🚀 Физика: Механика/МКТ" },
+          { id: "phys_elec", title: "⚡ Физика: Электр./Оптика" }
         ],
         getDeck: (subId) => {
           if (subId === "rus_stress") return STRESS_DATA;
@@ -593,6 +596,9 @@
           if (subId === "math_deriv") return MATH_DATA.filter(q => q.topic.includes("Производная") || q.topic.includes("функций")).map(q => ({...q, _examSubj: "math"}));
           if (subId === "math_prob") return MATH_DATA.filter(q => q.topic.includes("вероятност")).map(q => ({...q, _examSubj: "math"}));
           if (subId === "math_geom") return MATH_DATA.filter(q => q.topic.includes("Планиметрия") || q.topic.includes("Стереометрия") || q.topic.includes("Векторы")).map(q => ({...q, _examSubj: "math"}));
+          if (subId === "phys_all") return PHYSICS_DATA.map(q => ({...q, _examSubj: "phys"}));
+          if (subId === "phys_mech") return PHYSICS_DATA.filter(q => q.topic === "Механика" || q.topic.includes("МКТ")).map(q => ({...q, _examSubj: "phys"}));
+          if (subId === "phys_elec") return PHYSICS_DATA.filter(q => q.topic === "Электродинамика" || q.topic.includes("Оптика")).map(q => ({...q, _examSubj: "phys"}));
           return STRESS_DATA;
         }
       },
@@ -603,7 +609,8 @@
         subtopics: [
           { id: "ОГЭ Русский", title: "📖 Русский язык" },
           { id: "ОГЭ Математика", title: "📐 Математика" },
-          { id: "ОГЭ Обществознание", title: "🏛️ Обществознание" }
+          { id: "ОГЭ Обществознание", title: "🏛️ Обществознание" },
+          { id: "ОГЭ Физика", title: "⚛️ Физика" }
         ],
         getDeck: (subId) => {
           return OGE_DATA.filter(q => q.topic === subId);
@@ -618,6 +625,7 @@
           { id: "exam_ege", title: "🎓 Шпоры ЕГЭ" },
           { id: "exam_oge", title: "📘 Шпоры ОГЭ" },
           { id: "math", title: "📐 Математика" },
+          { id: "physics", title: "⚛️ Физика" },
           { id: "russian", title: "📖 Русский язык" },
           { id: "soc", title: "🏛️ Обществознание" }
         ],
@@ -782,6 +790,11 @@
         cardSubtitle.innerText = "";
       } else if (q._examSubj === "soc") {
         cardTag.innerText = `ЕГЭ Обществознание • ${q.topic}`;
+        cardTitle.innerText = q.question;
+        cardSubtitle.style.display = "none";
+        cardSubtitle.innerText = "";
+      } else if (q._examSubj === "phys") {
+        cardTag.innerText = `ЕГЭ Физика • ${q.topic}`;
         cardTitle.innerText = q.question;
         cardSubtitle.style.display = "none";
         cardSubtitle.innerText = "";
