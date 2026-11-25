@@ -599,15 +599,13 @@
       oge: {
         name: "ОГЭ 9 класс",
         btnId: "subjOge",
-        defaultSubtopic: "all",
+        defaultSubtopic: "ОГЭ Русский",
         subtopics: [
-          { id: "all", title: "🌟 Все задания ОГЭ" },
           { id: "ОГЭ Русский", title: "📖 Русский язык" },
           { id: "ОГЭ Математика", title: "📐 Математика" },
           { id: "ОГЭ Обществознание", title: "🏛️ Обществознание" }
         ],
         getDeck: (subId) => {
-          if (subId === "all") return OGE_DATA;
           return OGE_DATA.filter(q => q.topic === subId);
         }
       },
