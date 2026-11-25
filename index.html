@@ -483,11 +483,9 @@
   <header id="appHeader">
     <div class="top-bar">
       <div class="subject-tabs">
-        <button class="subject-btn active" id="subjRussian" onclick="switchSubject('russian')">📖 Русский</button>
-        <button class="subject-btn" id="subjSoc" onclick="switchSubject('soc')">🏛️ Общество</button>
-        <button class="subject-btn" id="subjMath" onclick="switchSubject('math')">📐 Математика</button>
-        <button class="subject-btn" id="subjOge" onclick="switchSubject('oge')">🎓 ОГЭ 9 кл.</button>
-        <button class="subject-btn" id="subjCheat" onclick="switchSubject('cheat')">📚 Шпора</button>
+        <button class="subject-btn active" id="subjEge" onclick="switchSubject('ege')" style="flex:1;">🎓 ЕГЭ</button>
+        <button class="subject-btn" id="subjOge" onclick="switchSubject('oge')" style="flex:1;">📘 ОГЭ</button>
+        <button class="subject-btn" id="subjCheat" onclick="switchSubject('cheat')" style="flex:1;">📚 Шпоры</button>
       </div>
       <div class="streak-badge">
         🔥 <span id="streakCount">0</span>
@@ -566,56 +564,34 @@
     }
 
     const SUBJECT_CONFIG = {
-      russian: {
-        name: "Русский язык",
-        btnId: "subjRussian",
-        defaultSubtopic: "stress",
+      ege: {
+        name: "ЕГЭ (10–11 кл.)",
+        btnId: "subjEge",
+        defaultSubtopic: "rus_stress",
         subtopics: [
-          { id: "stress", title: "🎯 Ударения (Зад. 4)" },
-          { id: "paronym", title: "📚 Паронимы (Зад. 5)" },
-          { id: "all", title: "🔀 Все задания (микс)" }
+          { id: "rus_stress", title: "🎯 Рус: Ударения" },
+          { id: "rus_paronym", title: "📚 Рус: Паронимы" },
+          { id: "rus_mix", title: "🔀 Рус: Микс" },
+          { id: "soc_all", title: "🏛️ Общество: Все" },
+          { id: "soc_econ", title: "💰 Общество: Экономика" },
+          { id: "soc_law", title: "⚖️ Общество: Право" },
+          { id: "math_all", title: "📐 Матем: Все" },
+          { id: "math_deriv", title: "⚡ Матем: Производная" },
+          { id: "math_prob", title: "🎲 Матем: Вероятность" },
+          { id: "math_geom", title: "📐 Матем: Геометрия" }
         ],
         getDeck: (subId) => {
-          if (subId === "stress") return STRESS_DATA;
-          if (subId === "paronym") return PARONYM_DATA;
-          return [...STRESS_DATA, ...PARONYM_DATA];
-        }
-      },
-      soc: {
-        name: "Обществознание",
-        btnId: "subjSoc",
-        defaultSubtopic: "all",
-        subtopics: [
-          { id: "all", title: "🌟 Все темы (ЕГЭ)" },
-          { id: "Человек и общество", title: "🧠 Человек и общество" },
-          { id: "Экономика", title: "💰 Экономика" },
-          { id: "Социальные отношения", title: "👥 Соц. отношения" },
-          { id: "Политика", title: "👑 Политика" },
-          { id: "Право", title: "⚖️ Право" }
-        ],
-        getDeck: (subId) => {
-          if (subId === "all") return SOC_DATA;
-          return SOC_DATA.filter(q => q.topic === subId);
-        }
-      },
-      math: {
-        name: "Математика",
-        btnId: "subjMath",
-        defaultSubtopic: "all",
-        subtopics: [
-          { id: "all", title: "🌟 Все задания (ЕГЭ)" },
-          { id: "deriv", title: "⚡ Производная и функции" },
-          { id: "prob", title: "🎲 Теория вероятностей" },
-          { id: "geom", title: "📐 Геометрия и векторы" },
-          { id: "alg", title: "🔢 Алгебра и уравнения" }
-        ],
-        getDeck: (subId) => {
-          if (subId === "all") return MATH_DATA;
-          if (subId === "deriv") return MATH_DATA.filter(q => q.topic.includes("Производная") || q.topic.includes("функций"));
-          if (subId === "prob") return MATH_DATA.filter(q => q.topic.includes("вероятност"));
-          if (subId === "geom") return MATH_DATA.filter(q => q.topic.includes("Планиметрия") || q.topic.includes("Стереометрия") || q.topic.includes("Векторы"));
-          if (subId === "alg") return MATH_DATA.filter(q => q.topic.includes("уравнения") || q.topic.includes("Логарифмы") || q.topic.includes("Степени") || q.topic.includes("Тригонометрия") || q.topic.includes("задачи"));
-          return MATH_DATA;
+          if (subId === "rus_stress") return STRESS_DATA;
+          if (subId === "rus_paronym") return PARONYM_DATA;
+          if (subId === "rus_mix") return [...STRESS_DATA, ...PARONYM_DATA];
+          if (subId === "soc_all") return SOC_DATA.map(q => ({...q, _examSubj: "soc"}));
+          if (subId === "soc_econ") return SOC_DATA.filter(q => q.topic === "Экономика").map(q => ({...q, _examSubj: "soc"}));
+          if (subId === "soc_law") return SOC_DATA.filter(q => q.topic === "Право").map(q => ({...q, _examSubj: "soc"}));
+          if (subId === "math_all") return MATH_DATA.map(q => ({...q, _examSubj: "math"}));
+          if (subId === "math_deriv") return MATH_DATA.filter(q => q.topic.includes("Производная") || q.topic.includes("функций")).map(q => ({...q, _examSubj: "math"}));
+          if (subId === "math_prob") return MATH_DATA.filter(q => q.topic.includes("вероятност")).map(q => ({...q, _examSubj: "math"}));
+          if (subId === "math_geom") return MATH_DATA.filter(q => q.topic.includes("Планиметрия") || q.topic.includes("Стереометрия") || q.topic.includes("Векторы")).map(q => ({...q, _examSubj: "math"}));
+          return STRESS_DATA;
         }
       },
       oge: {
@@ -634,24 +610,28 @@
         }
       },
       cheat: {
-        name: "Шпаргалка",
+        name: "Шпоры (ЕГЭ и ОГЭ)",
         btnId: "subjCheat",
         defaultSubtopic: "all",
         subtopics: [
-          { id: "all", title: "🌟 Все разделы" },
-          { id: "math", title: "📐 Формулы (Матем.)" },
-          { id: "russian", title: "📖 Правила (Русский)" },
-          { id: "soc", title: "🏛️ Таблицы (Общество)" }
+          { id: "all", title: "🌟 Все шпоры" },
+          { id: "exam_ege", title: "🎓 Шпоры ЕГЭ" },
+          { id: "exam_oge", title: "📘 Шпоры ОГЭ" },
+          { id: "math", title: "📐 Математика" },
+          { id: "russian", title: "📖 Русский язык" },
+          { id: "soc", title: "🏛️ Обществознание" }
         ],
         getDeck: (subId) => {
           if (subId === "all") return CHEATSHEETS;
+          if (subId === "exam_ege") return CHEATSHEETS.filter(c => c.exam === "ege" || c.exam === "both");
+          if (subId === "exam_oge") return CHEATSHEETS.filter(c => c.exam === "oge" || c.exam === "both");
           return CHEATSHEETS.filter(c => c.category === subId);
         }
       }
     };
 
-    let currentSubject = "russian";
-    let currentSubtopic = "stress";
+    let currentSubject = "ege";
+    let currentSubtopic = "rus_stress";
     let deck = [];
     let currentIndex = 0;
     let score = { correct: 0, total: 0 };
@@ -740,7 +720,15 @@
 
     function renderCheatsheets(items) {
       const container = document.getElementById("cheatsheetContainer");
-      container.innerHTML = "";
+      container.innerHTML = `
+        <div class="cheat-card" style="border-color: rgba(56, 189, 248, 0.45); background: rgba(56, 189, 248, 0.08);">
+          <span class="cheat-badge">💡 Памятка ученику</span>
+          <h3 class="cheat-title" style="font-size: 15px; margin-bottom: 6px;">Для лёгкого запоминания, а не списывания!</h3>
+          <p style="font-size: 13px; color: #cbd5e1; line-height: 1.45;">
+            Эти шпоры для ЕГЭ и ОГЭ собраны, чтобы быстро освежить формулы и правила в памяти перед тренировкой, а не для списывания на экзамене.
+          </p>
+        </div>
+      `;
       items.forEach(sheet => {
         const card = document.createElement("div");
         card.className = "cheat-card";
@@ -785,13 +773,13 @@
         cardTitle.innerText = `«${q.sentence}»`;
         cardSubtitle.style.display = "block";
         cardSubtitle.innerText = "Вставьте подходящее слово из пары паронимов:";
-      } else if (currentSubject === "soc") {
-        cardTag.innerText = `ЕГЭ Обществознание • ${q.topic}`;
+      } else if (currentSubject === "oge") {
+        cardTag.innerText = `ОГЭ 9 класс • ${q.topic.replace("ОГЭ ", "")}`;
         cardTitle.innerText = q.question;
         cardSubtitle.style.display = "none";
         cardSubtitle.innerText = "";
-      } else if (currentSubject === "oge") {
-        cardTag.innerText = `ОГЭ 9 класс • ${q.topic.replace("ОГЭ ", "")}`;
+      } else if (q._examSubj === "soc") {
+        cardTag.innerText = `ЕГЭ Обществознание • ${q.topic}`;
         cardTitle.innerText = q.question;
         cardSubtitle.style.display = "none";
         cardSubtitle.innerText = "";
