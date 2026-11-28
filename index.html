@@ -558,11 +558,21 @@
   <script src="questions.js"></script>
   
   <script>
-    // Initialize Telegram WebApp
+    // Initialize Telegram WebApp & Statistics API URL
     const tg = window.Telegram?.WebApp;
     if (tg) {
       tg.expand();
       tg.ready();
+    }
+
+    const urlParams = new URLSearchParams(window.location.search);
+    const apiFromQuery = urlParams.get("api");
+    if (apiFromQuery) {
+      try { localStorage.setItem("ege_api_url", apiFromQuery); } catch (e) {}
+    }
+    let API_BASE_URL = apiFromQuery || "";
+    if (!API_BASE_URL) {
+      try { API_BASE_URL = localStorage.getItem("ege_api_url") || ""; } catch (e) {}
     }
 
     const SUBJECT_CONFIG = {
@@ -645,6 +655,7 @@
     let score = { correct: 0, total: 0 };
     let currentStreak = 0;
     let mistakes = [];
+    let roundReported = false;
 
     // Fisher-Yates Shuffle without repetition
     function shuffle(array) {
@@ -724,6 +735,7 @@
       currentIndex = 0;
       score = { correct: 0, total: deck.length };
       mistakes = [];
+      roundReported = false;
       updateProgress();
       renderCurrentQuestion();
     }
@@ -904,6 +916,24 @@
       const repeatBtn = document.getElementById("repeatMistakesBtn");
       repeatBtn.style.display = mistakes.length > 0 ? "block" : "none";
 
+      if (!roundReported && attempted > 0 && API_BASE_URL) {
+        roundReported = true;
+        const tgUser = tg?.initDataUnsafe?.user;
+        fetch(`${API_BASE_URL}/api/miniapp_result`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            user_id: tgUser?.id || null,
+            username: tgUser?.username || tgUser?.first_name || "WebГость",
+            exam: currentSubject,
+            subtopic: currentSubtopic,
+            correct: score.correct,
+            attempted: attempted,
+            is_early: isEarly
+          })
+        }).catch(() => {});
+      }
+
       tg?.HapticFeedback?.notificationOccurred("success");
     }
 
@@ -927,6 +957,7 @@
       mistakes = [];
       currentIndex = 0;
       score = { correct: 0, total: deck.length };
+      roundReported = false;
 
       document.getElementById("resultsScreen").style.display = "none";
       document.getElementById("mainContainer").style.display = "flex";
